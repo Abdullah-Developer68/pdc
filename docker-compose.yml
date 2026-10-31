@@ -1,0 +1,70 @@
+services:
+  # ========================================================
+  # Web Application Service (React + Express)
+  # Built directly from the multi-stage Dockerfile
+  # ========================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdc_web_app
+    restart: unless-stopped
+    ports:
+      - "80:5000"
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      - DB_PORT=5432
+      - PORT=5000
+    secrets:
+      - db_password
+      - db_user
+      - db_name
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ========================================================
+  # Database Service (PostgreSQL)
+  # Secure credentials managed via Docker Secrets
+  # Persistent data managed via Named Volume
+  # ========================================================
+  db:
+    image: postgres:16-alpine
+    container_name: pdc_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB_FILE: /run/secrets/db_name
+    secrets:
+      - db_password
+      - db_user
+      - db_name
+    volumes:
+      - pdc_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$(cat /run/secrets/db_user) -d $$(cat /run/secrets/db_name)"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# ==========================================================
+# Named Volumes for Data Persistence
+# ==========================================================
+volumes:
+  pdc_db_data:
+    name: pdc_db_data
+
+# ==========================================================
+# Docker Compose Secrets
+# ==========================================================
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  db_user:
+    file: ./secrets/db_user.txt
+  db_name:
+    file: ./secrets/db_name.txt
