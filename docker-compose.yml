@@ -34,6 +34,8 @@ services:
     image: postgres:16-alpine
     container_name: pdc_db
     restart: unless-stopped
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER_FILE: /run/secrets/db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
@@ -49,7 +51,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 5s
 
 # ==========================================================
 # Named Volumes for Data Persistence

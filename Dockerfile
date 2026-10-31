@@ -43,8 +43,8 @@ USER node
 
 EXPOSE 5000
 
-# Healthcheck for container orchestration
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:5000/api/health || exit 1
+# Healthcheck for container orchestration (using 127.0.0.1 to avoid IPv6 resolution issues)
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:5000/api/health || exit 1
 
 CMD ["node", "index.js"]

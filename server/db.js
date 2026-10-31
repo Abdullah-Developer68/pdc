@@ -1,26 +1,46 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import pkg from 'pg';
 const { Pool } = pkg;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 function getSecret(secretName, envVar, fallback) {
-  const secretPath = `/run/secrets/${secretName}`;
-  try {
-    if (fs.existsSync(secretPath)) {
-      return fs.readFileSync(secretPath, 'utf8').trim();
+  // Check Docker secret location first (/run/secrets/), then local host file locations
+  const candidatePaths = [
+    `/run/secrets/${secretName}`,
+    path.resolve(process.cwd(), 'secrets', `${secretName}.txt`),
+    path.resolve(__dirname, '..', 'secrets', `${secretName}.txt`),
+    path.resolve(__dirname, 'secrets', `${secretName}.txt`),
+  ];
+
+  for (const sPath of candidatePaths) {
+    try {
+      if (fs.existsSync(sPath)) {
+        const val = fs.readFileSync(sPath, 'utf8').trim();
+        if (val) {
+          console.log(`[Database] Loaded secret '${secretName}' from ${sPath}`);
+          return val;
+        }
+      }
+    } catch (_) {
+      // Continue to next candidate
     }
-  } catch (err) {
-    console.warn(`Could not read secret file at ${secretPath}: ${err.message}`);
   }
+
+  // Fallback to environment variable or default
   return process.env[envVar] || fallback;
 }
 
-const dbUser = getSecret('db_user', 'DB_USER', 'postgres');
-const dbPassword = getSecret('db_password', 'DB_PASSWORD', 'postgres_password');
-const dbName = getSecret('db_name', 'DB_NAME', 'pdc_assignment');
+const dbUser = getSecret('db_user', 'DB_USER', 'pdc_user');
+const dbPassword = getSecret('db_password', 'DB_PASSWORD', 'pdc_secure_password_2026');
+const dbName = getSecret('db_name', 'DB_NAME', 'pdc_assignment_db');
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
 
-console.log(`[Database] Configuring connection to host: ${dbHost}, port: ${dbPort}, database: ${dbName}, user: ${dbUser}`);
+console.log(`[Database] Target connection -> host: ${dbHost}, port: ${dbPort}, database: ${dbName}, user: ${dbUser}`);
 
 export const pool = new Pool({
   host: dbHost,
@@ -33,7 +53,12 @@ export const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-export async function initDatabase(retries = 10, delay = 3000) {
+// Prevent unhandled error crashes on idle clients
+pool.on('error', (err) => {
+  console.error('[Database Pool Error] Unexpected idle client error:', err.message);
+});
+
+export async function initDatabase(retries = 15, delay = 2000) {
   for (let i = 1; i <= retries; i++) {
     try {
       console.log(`[Database] Attempting connection (${i}/${retries})...`);
@@ -50,7 +75,7 @@ export async function initDatabase(retries = 10, delay = 3000) {
         );
       `);
 
-      // Seed initial data if empty
+      // Seed initial data if table is brand new and empty
       const countRes = await client.query('SELECT COUNT(*) FROM tasks');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
         await client.query(`
@@ -67,7 +92,7 @@ export async function initDatabase(retries = 10, delay = 3000) {
     } catch (err) {
       console.warn(`[Database] Connection attempt ${i} failed: ${err.message}`);
       if (i === retries) {
-        console.error('[Database] Max retries reached. Database initialization failed.');
+        console.error('[Database] All connection retries failed. Verify database container is running and credentials match.');
         throw err;
       }
       await new Promise((resolve) => setTimeout(resolve, delay));
