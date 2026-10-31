@@ -8,3 +8,4 @@ client/dist/
 skills/
 secrets/
 docker-secrets.zip
+extracted_images/
