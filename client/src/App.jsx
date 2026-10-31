@@ -8,8 +8,7 @@ import {
   Plus,
   Trash2,
   Clock,
-  Layers,
-  Cloud
+  Layers
 } from 'lucide-react';
 
 export default function App() {
@@ -109,99 +108,75 @@ export default function App() {
   const isDbConnected = health?.database?.status === 'connected';
 
   return (
-    <div className="container">
-      <header className="header">
-        <div className="title-row">
-          <div className="title-group">
-            <div className="logo-icon">
-              <Layers size={28} />
+    <div className="apple-app">
+      <header className="apple-header">
+        <div className="apple-top-bar">
+          <div>
+            <div className="student-tag">
+              Assignment 2 &bull; DevOps
             </div>
-            <div>
-              <h1>Cloud Task Manager</h1>
-              <p className="subtitle">
-                CSC336 DevOps Assignment 2 &bull; Multi-Container AWS EC2 Architecture
-              </p>
+            <h1 className="apple-title">Cloud Deployment Platform</h1>
+            <p className="apple-subtitle">
+              Parallel and Distributed Computing &bull; Multi-Container Architecture on AWS EC2
+            </p>
+            <div className="student-details">
+              <span>Developer: <strong className="student-name">ABDULLAH</strong></span>
+              <span>Registration ID: <strong className="student-reg">FA23-BSE-137</strong></span>
             </div>
           </div>
 
           <button
             onClick={refreshAll}
-            className="btn btn-secondary"
-            title="Refresh status and tasks"
+            className="apple-btn-secondary"
             disabled={refreshing}
           >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Syncing...' : 'Refresh'}
           </button>
         </div>
 
-        <div className="meta-grid">
-          <div className="meta-card">
-            <span className="meta-label">
-              <Database size={14} /> Database Server
-            </span>
-            <div className="meta-value">
-              <span
-                className={`status-indicator ${
-                  isDbConnected ? 'status-online' : 'status-offline'
-                }`}
-              />
+        <div className="telemetry-grid">
+          <div className="telemetry-card">
+            <span className="telemetry-label">Database Server</span>
+            <div className="telemetry-value">
+              <span className={`status-dot ${isDbConnected ? 'active' : ''}`} />
               {isDbConnected ? 'PostgreSQL Active' : 'Disconnected'}
             </div>
           </div>
 
-          <div className="meta-card">
-            <span className="meta-label">
-              <Server size={14} /> Web Container Host
-            </span>
-            <div className="meta-value font-mono">
+          <div className="telemetry-card">
+            <span className="telemetry-label">Container Node</span>
+            <div className="telemetry-value font-mono">
               <code>{health?.container?.hostname || 'pdc_web_app'}</code>
             </div>
           </div>
 
-          <div className="meta-card">
-            <span className="meta-label">
-              <ShieldCheck size={14} /> Docker Secrets
-            </span>
-            <div className="meta-value" style={{ color: 'var(--accent-green)' }}>
-              Enabled (/run/secrets)
+          <div className="telemetry-card">
+            <span className="telemetry-label">Secrets Manager</span>
+            <div className="telemetry-value font-mono">
+              /run/secrets (Mounted)
             </div>
           </div>
 
-          <div className="meta-card">
-            <span className="meta-label">
-              <HardDrive size={14} /> Named Volume
-            </span>
-            <div className="meta-value" style={{ color: 'var(--accent-blue)' }}>
-              pdc_db_data (Persistent)
+          <div className="telemetry-card">
+            <span className="telemetry-label">Persistence Volume</span>
+            <div className="telemetry-value font-mono">
+              pdc_db_data (Attached)
             </div>
           </div>
-        </div>
-
-        <div className="features-pills">
-          <span className="pill">
-            <Layers size={13} /> Multi-Stage Dockerfile (Build + Alpine Runtime)
-          </span>
-          <span className="pill pill-green">
-            <ShieldCheck size={13} /> Docker Compose Secrets
-          </span>
-          <span className="pill pill-purple">
-            <Cloud size={13} /> Amazon EC2 Ready (IaaS)
-          </span>
         </div>
       </header>
 
-      <div className="card">
-        <h2 style={{ fontSize: '1.15rem', marginBottom: '1rem', fontWeight: 600 }}>
-          Create New Task / Record
-        </h2>
-        <form onSubmit={handleCreateTask} className="form-group">
-          <div className="input-row">
+      <section className="apple-card">
+        <h2 className="card-heading">Add Record</h2>
+        <form onSubmit={handleCreateTask} className="apple-form">
+          <div className="form-inputs">
             <input
               type="text"
-              placeholder="Task Title (e.g. Deploy to EC2)"
+              placeholder="Record title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="apple-input"
               required
             />
             <input
@@ -209,87 +184,76 @@ export default function App() {
               placeholder="Description (optional)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="apple-input"
             />
             <button
               type="submit"
-              className="btn btn-primary"
+              className="apple-btn-primary"
               disabled={loading || !title.trim()}
             >
-              <Plus size={18} />
-              {loading ? 'Adding...' : 'Add Task'}
+              <Plus size={15} />
+              {loading ? 'Adding...' : 'Add'}
             </button>
           </div>
         </form>
-      </div>
+      </section>
 
-      <div className="card">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1rem',
-          }}
-        >
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 600 }}>
-            Stored Records in PostgreSQL ({tasks.length})
+      <section className="apple-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 className="card-heading" style={{ margin: 0 }}>
+            Stored Records ({tasks.length})
           </h2>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            Persists across container restarts via named volume
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            PostgreSQL Named Volume
           </span>
         </div>
 
         {tasks.length === 0 ? (
           <div className="empty-state">
-            <Clock size={40} style={{ opacity: 0.3, marginBottom: '0.5rem' }} />
-            <p>No tasks found in the database. Add one above to test persistence!</p>
+            <p>No records stored in the database. Create one above to verify volume persistence.</p>
           </div>
         ) : (
           <div className="task-list">
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className={`task-item ${task.status === 'completed' ? 'completed' : ''}`}
+                className={`task-row ${task.status === 'completed' ? 'completed' : ''}`}
               >
-                <div className="task-main">
+                <div className="task-left">
                   <input
                     type="checkbox"
-                    className="task-checkbox"
+                    className="apple-checkbox"
                     checked={task.status === 'completed'}
                     onChange={() => handleToggleTask(task)}
                   />
-                  <div className="task-content">
+                  <div className="task-info">
                     <span className="task-title">{task.title}</span>
                     {task.description && (
                       <span className="task-desc">{task.description}</span>
                     )}
-                    <span className="task-date">
-                      ID: #{task.id} &bull; Created:{' '}
-                      {new Date(task.created_at).toLocaleString()}
+                    <span className="task-meta">
+                      ID #{task.id} &bull; {new Date(task.created_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleDeleteTask(task.id)}
-                  className="btn btn-danger"
-                  title="Delete Task"
+                  className="apple-btn-delete"
+                  title="Delete record"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <footer className="footer">
-        <p>
-          CSC336 - Parallel and Distributed Computing (DevOps) &bull; Assignment 2
-        </p>
-        <p style={{ marginTop: '0.25rem', fontSize: '0.8rem' }}>
-          Containerized with Multi-Stage Docker &bull; Docker Compose Secrets &bull; PostgreSQL Named Volume
-        </p>
+      <footer className="apple-footer">
+        <p><strong>CSC336 - Parallel and Distributed Computing</strong> &bull; Assignment 2</p>
+        <p>Student: <strong>ABDULLAH</strong> &bull; Registration: <strong>FA23-BSE-137</strong></p>
+        <p>Multi-Stage Dockerfile &bull; Docker Compose Secrets &bull; PostgreSQL 16 Named Volume</p>
       </footer>
     </div>
   );
