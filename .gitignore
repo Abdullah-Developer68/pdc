@@ -11,4 +11,3 @@ docker-secrets.zip
 extracted_images/
 *.docx
 *.pdf
-generate_report.py
