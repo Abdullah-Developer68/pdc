@@ -8,7 +8,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function getSecret(secretName, envVar, fallback) {
-  // Check Docker secret location first (/run/secrets/), then local host file locations
   const candidatePaths = [
     `/run/secrets/${secretName}`,
     path.resolve(process.cwd(), 'secrets', `${secretName}.txt`),
@@ -21,16 +20,13 @@ function getSecret(secretName, envVar, fallback) {
       if (fs.existsSync(sPath)) {
         const val = fs.readFileSync(sPath, 'utf8').trim();
         if (val) {
-          console.log(`[Database] Loaded secret '${secretName}' from ${sPath}`);
           return val;
         }
       }
     } catch (_) {
-      // Continue to next candidate
     }
   }
 
-  // Fallback to environment variable or default
   return process.env[envVar] || fallback;
 }
 
@@ -39,8 +35,6 @@ const dbPassword = getSecret('db_password', 'DB_PASSWORD', 'pdc_secure_password_
 const dbName = getSecret('db_name', 'DB_NAME', 'pdc_assignment_db');
 const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = parseInt(process.env.DB_PORT || '5432', 10);
-
-console.log(`[Database] Target connection -> host: ${dbHost}, port: ${dbPort}, database: ${dbName}, user: ${dbUser}`);
 
 export const pool = new Pool({
   host: dbHost,
@@ -53,17 +47,14 @@ export const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-// Prevent unhandled error crashes on idle clients
 pool.on('error', (err) => {
-  console.error('[Database Pool Error] Unexpected idle client error:', err.message);
+  console.error('[Database Pool Error]:', err.message);
 });
 
 export async function initDatabase(retries = 15, delay = 2000) {
   for (let i = 1; i <= retries; i++) {
     try {
-      console.log(`[Database] Attempting connection (${i}/${retries})...`);
       const client = await pool.connect();
-      console.log('[Database] Successfully connected to PostgreSQL.');
 
       await client.query(`
         CREATE TABLE IF NOT EXISTS tasks (
@@ -75,7 +66,6 @@ export async function initDatabase(retries = 15, delay = 2000) {
         );
       `);
 
-      // Seed initial data if table is brand new and empty
       const countRes = await client.query('SELECT COUNT(*) FROM tasks');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
         await client.query(`
@@ -84,15 +74,12 @@ export async function initDatabase(retries = 15, delay = 2000) {
           ('Implement Multistage Dockerfile', 'Build React in Stage 1 and serve using minimal Node runtime in Stage 2', 'completed'),
           ('Setup Docker Secrets & Volumes', 'Secure DB credentials with Docker secrets and persist data with named volume', 'in-progress');
         `);
-        console.log('[Database] Seeded initial sample tasks.');
       }
 
       client.release();
       return true;
     } catch (err) {
-      console.warn(`[Database] Connection attempt ${i} failed: ${err.message}`);
       if (i === retries) {
-        console.error('[Database] All connection retries failed. Verify database container is running and credentials match.');
         throw err;
       }
       await new Promise((resolve) => setTimeout(resolve, delay));

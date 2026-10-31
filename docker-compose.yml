@@ -1,8 +1,4 @@
 services:
-  # ========================================================
-  # Web Application Service (React + Express)
-  # Built directly from the multi-stage Dockerfile
-  # ========================================================
   web:
     build:
       context: .
@@ -25,11 +21,6 @@ services:
       db:
         condition: service_healthy
 
-  # ========================================================
-  # Database Service (PostgreSQL)
-  # Secure credentials managed via Docker Secrets
-  # Persistent data managed via Named Volume
-  # ========================================================
   db:
     image: postgres:16-alpine
     container_name: pdc_db
@@ -53,16 +44,10 @@ services:
       retries: 5
       start_period: 5s
 
-# ==========================================================
-# Named Volumes for Data Persistence
-# ==========================================================
 volumes:
   pdc_db_data:
     name: pdc_db_data
 
-# ==========================================================
-# Docker Compose Secrets
-# ==========================================================
 secrets:
   db_password:
     file: ./secrets/db_password.txt

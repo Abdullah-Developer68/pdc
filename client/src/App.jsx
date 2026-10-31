@@ -7,7 +7,6 @@ import {
   RefreshCw,
   Plus,
   Trash2,
-  CheckCircle2,
   Clock,
   Layers,
   Cloud
@@ -111,7 +110,6 @@ export default function App() {
 
   return (
     <div className="container">
-      {/* Header */}
       <header className="header">
         <div className="title-row">
           <div className="title-group">
@@ -137,7 +135,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* System & Container Metadata */}
         <div className="meta-grid">
           <div className="meta-card">
             <span className="meta-label">
@@ -181,7 +178,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Feature Pills */}
         <div className="features-pills">
           <span className="pill">
             <Layers size={13} /> Multi-Stage Dockerfile (Build + Alpine Runtime)
@@ -195,7 +191,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Task Creation Form */}
       <div className="card">
         <h2 style={{ fontSize: '1.15rem', marginBottom: '1rem', fontWeight: 600 }}>
           Create New Task / Record
@@ -227,7 +222,6 @@ export default function App() {
         </form>
       </div>
 
-      {/* Task List */}
       <div className="card">
         <div
           style={{
@@ -289,7 +283,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Footer */}
       <footer className="footer">
         <p>
           CSC336 - Parallel and Distributed Computing (DevOps) &bull; Assignment 2

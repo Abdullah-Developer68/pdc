@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Health & System Info Endpoint
 app.get('/api/health', async (req, res) => {
   let dbStatus = 'disconnected';
   let dbVersion = null;
@@ -45,13 +44,11 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// Tasks API
 app.get('/api/tasks', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
     res.json(rows);
   } catch (err) {
-    console.error('Error fetching tasks:', err);
     res.status(500).json({ error: 'Failed to fetch tasks', details: err.message });
   }
 });
@@ -69,7 +66,6 @@ app.post('/api/tasks', async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (err) {
-    console.error('Error creating task:', err);
     res.status(500).json({ error: 'Failed to create task', details: err.message });
   }
 });
@@ -88,7 +84,6 @@ app.patch('/api/tasks/:id', async (req, res) => {
     }
     res.json(rows[0]);
   } catch (err) {
-    console.error('Error updating task:', err);
     res.status(500).json({ error: 'Failed to update task', details: err.message });
   }
 });
@@ -102,12 +97,10 @@ app.delete('/api/tasks/:id', async (req, res) => {
     }
     res.json({ message: 'Task deleted successfully' });
   } catch (err) {
-    console.error('Error deleting task:', err);
     res.status(500).json({ error: 'Failed to delete task', details: err.message });
   }
 });
 
-// Serve static frontend in production
 const possibleClientDirs = [
   path.join(__dirname, 'public'),
   path.join(__dirname, '../client/dist'),
@@ -116,7 +109,6 @@ const possibleClientDirs = [
 const clientDir = possibleClientDirs.find((dir) => fs.existsSync(dir));
 
 if (clientDir) {
-  console.log(`[Express] Serving static frontend from: ${clientDir}`);
   app.use(express.static(clientDir));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) {
@@ -126,12 +118,11 @@ if (clientDir) {
   });
 }
 
-// Start Server
 async function startServer() {
   try {
     await initDatabase();
   } catch (err) {
-    console.warn('[Server] DB failed to initialize at launch, will retry on requests:', err.message);
+    console.warn('[Server] DB initialization retry on demand:', err.message);
   }
 
   app.listen(PORT, '0.0.0.0', () => {
